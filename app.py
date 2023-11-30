@@ -2,8 +2,10 @@ from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
 from bson import ObjectId
 import os
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 app.config["MONGO_URI"] = "mongodb+srv://aussie-tea-user:aussie123@aussie-tea.xcz2kza.mongodb.net/form?retryWrites=true&w=majority"
 
 
