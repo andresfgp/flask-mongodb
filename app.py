@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
 from bson import ObjectId
+import os
 
 app = Flask(__name__)
 app.config["MONGO_URI"] = "mongodb+srv://aussie-tea-user:aussie123@aussie-tea.xcz2kza.mongodb.net/form?retryWrites=true&w=majority"
@@ -87,4 +88,4 @@ def delete(id):
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
