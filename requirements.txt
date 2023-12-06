@@ -8,5 +8,4 @@ Flask-Login==0.5.0
 Werkzeug==2.0.2
 Flask-WTF==0.15.1
 Flask-Limiter==1.4.0
-pyjwt
-datetime
+PyJWT==2.3.0
