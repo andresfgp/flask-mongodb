@@ -4,7 +4,6 @@ from crud_operations import create_document, read_all_documents, read_one_docume
 
 def configure_contact_routes(app, contact_collection):
     @app.route('/contact', methods=['POST'])
-    @login_required
     def create_contact():
         try:
             data = request.get_json()
@@ -17,7 +16,6 @@ def configure_contact_routes(app, contact_collection):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/contact', methods=['GET'])
-    @login_required
     def read_contacts():
         try:
             data, error = read_all_documents(contact_collection)
@@ -28,7 +26,6 @@ def configure_contact_routes(app, contact_collection):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/contact/<id>', methods=['GET'])
-    @login_required
     def read_one_contact(id):
         try:
             data, error = read_one_document(contact_collection, id)
@@ -39,7 +36,6 @@ def configure_contact_routes(app, contact_collection):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/contact/<id>', methods=['PUT'])
-    @login_required
     def update_contact(id):
         try:
             data = request.get_json()
@@ -51,7 +47,6 @@ def configure_contact_routes(app, contact_collection):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/contact/<id>', methods=['PATCH'])
-    @login_required
     def partial_update_contact(id):
         try:
             data = request.get_json()
@@ -63,7 +58,6 @@ def configure_contact_routes(app, contact_collection):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/contact/<id>', methods=['DELETE'])
-    @login_required
     def delete_contact(id):
         try:
             result, error = delete_document(contact_collection, id)
