@@ -1,6 +1,5 @@
 from flask import Flask
 from flask_pymongo import PyMongo
-from flask_login import LoginManager
 import os
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
@@ -12,12 +11,10 @@ from resources.auth import configure_auth
 app = Flask(__name__)
 app.secret_key = "your_secret_key"
 CORS(app)
-app.config["MONGO_URI"] = "mongodb+srv://aussie-tea-user:aussie123@aussie-tea.xcz2kza.mongodb.net/form?retryWrites=true&w=majority"
+app.config["MONGO_URI"] = "mongodb+srv://aussie-tea-user:GNoKDXUv3swk4ydK@aussie-tea.xcz2kza.mongodb.net/form?retryWrites=true&w=majority"
 
 mongo = PyMongo(app)
 bcrypt = Bcrypt(app)
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
 
 # MongoDB Collections
 users_collection = mongo.db.users
