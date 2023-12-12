@@ -1,10 +1,10 @@
 from flask import jsonify, request
-from flask_login import login_required
+from flask_jwt_extended import jwt_required
 from crud_operations import create_document, read_all_documents, read_one_document, update_document, partial_update_document, delete_document
 
 def configure_roles_routes(app, roles_collection):
     @app.route('/roles', methods=['POST'])
-    @login_required
+    @jwt_required()
     def create_role():
         try:
             data = request.get_json()
@@ -16,7 +16,7 @@ def configure_roles_routes(app, roles_collection):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/roles', methods=['GET'])
-    @login_required
+    @jwt_required()
     def read_roles():
         try:
             data, error = read_all_documents(roles_collection)
@@ -27,7 +27,7 @@ def configure_roles_routes(app, roles_collection):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/roles/<id>', methods=['GET'])
-    @login_required
+    @jwt_required()
     def read_one_role(id):
         try:
             data, error = read_one_document(roles_collection, id)
@@ -38,7 +38,7 @@ def configure_roles_routes(app, roles_collection):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/roles/<id>', methods=['PUT'])
-    @login_required
+    @jwt_required()
     def update_role(id):
         try:
             data = request.get_json()
@@ -50,7 +50,7 @@ def configure_roles_routes(app, roles_collection):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/roles/<id>', methods=['PATCH'])
-    @login_required
+    @jwt_required()
     def partial_update_role(id):
         try:
             data = request.get_json()
@@ -62,7 +62,7 @@ def configure_roles_routes(app, roles_collection):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/roles/<id>', methods=['DELETE'])
-    @login_required
+    @jwt_required()
     def delete_role(id):
         try:
             result, error = delete_document(roles_collection, id)

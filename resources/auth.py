@@ -1,5 +1,5 @@
 from flask_bcrypt import Bcrypt
-from flask import jsonify, request, flash
+from flask import jsonify, request
 from bson import ObjectId
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt
 from blacklist import token_blacklist
@@ -7,10 +7,10 @@ from blacklist import token_blacklist
 bcrypt = Bcrypt()
 
 class User:
-    def __init__(self, id, email):
+    def __init__(self, id, email, full_name=""):
         self.id = id
         self.email = email
-
+        self.full_name = full_name
 
 def configure_auth(app, users_collection):
     jwt = JWTManager(app)
@@ -19,14 +19,14 @@ def configure_auth(app, users_collection):
     def user_loader_callback(identity):
         user_data = users_collection.find_one({'_id': ObjectId(identity)})
         if user_data:
-            return {'id': str(user_data['_id'])}
-        return None
+            return User(id=str(user_data['_id']), email=user_data['email'], full_name=user_data.get('full_name', ''))
 
     @app.route('/login', methods=['POST'])
     def login():
-        if request.method == 'POST':
-            email = request.json.get('email')
-            password = request.json.get('password')
+        try:
+            data = request.get_json()
+            email = data.get('email')
+            password = data.get('password')
 
             if not email or not password:
                 return jsonify({'error': 'Email and password are required'}), 400
@@ -42,15 +42,17 @@ def configure_auth(app, users_collection):
                 return jsonify({'message': 'Login successful', 'data': additional_data, 'token': token}), 200
 
             return jsonify({'error': 'Invalid email or password'}), 401
-
-        return jsonify({'error': 'Method not allowed'}), 405
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
 
     @app.route('/logout', methods=['POST'])
     @jwt_required()
     def logout():
-        jti = get_jwt()['jti']
-        app.config['JWT_BLACKLIST_ENABLED'] = True
-        app.config['JWT_BLACKLIST_TOKEN_CHECK'] = 'refresh'
-        token_blacklist.add(jti)
-        flash('You have been logged out', 'success')
-        return jsonify({'message': 'Logout successful'}), 200
+        try:
+            jti = get_jwt()['jti']
+            app.config['JWT_BLACKLIST_ENABLED'] = True
+            app.config['JWT_BLACKLIST_TOKEN_CHECK'] = 'refresh'
+            token_blacklist.add(jti)
+            return jsonify({'message': 'Logout successful'}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500

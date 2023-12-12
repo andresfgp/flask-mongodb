@@ -1,5 +1,5 @@
 from flask import jsonify, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
 from crud_operations import create_document, read_all_documents, read_one_document, update_document, partial_update_document, delete_document
 
 def configure_contact_routes(app, contact_collection):

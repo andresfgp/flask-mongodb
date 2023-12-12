@@ -1,10 +1,10 @@
 from flask import jsonify, request
-from flask_login import login_required
+from flask_jwt_extended import jwt_required
 from crud_operations import create_document, read_all_documents, read_one_document, update_document, partial_update_document, delete_document
 
 def configure_users_routes(app, users_collection, bcrypt):
     @app.route('/users', methods=['POST'])
-    @login_required
+    @jwt_required()
     def create_user():
         try:
             data = request.get_json()
@@ -18,7 +18,7 @@ def configure_users_routes(app, users_collection, bcrypt):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/users', methods=['GET'])
-    @login_required
+    @jwt_required()
     def read_users():
         try:
             data, error = read_all_documents(users_collection)
@@ -29,7 +29,7 @@ def configure_users_routes(app, users_collection, bcrypt):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/users/<id>', methods=['GET'])
-    @login_required
+    @jwt_required()
     def read_one_user(id):
         try:
             data, error = read_one_document(users_collection, id)
@@ -40,7 +40,7 @@ def configure_users_routes(app, users_collection, bcrypt):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/users/<id>', methods=['PUT'])
-    @login_required
+    @jwt_required()
     def update_user(id):
         try:
             data = request.get_json()
@@ -52,7 +52,7 @@ def configure_users_routes(app, users_collection, bcrypt):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/users/<id>', methods=['PATCH'])
-    @login_required
+    @jwt_required()
     def partial_update_user(id):
         try:
             data = request.get_json()
@@ -64,7 +64,7 @@ def configure_users_routes(app, users_collection, bcrypt):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/users/<id>', methods=['DELETE'])
-    @login_required
+    @jwt_required()
     def delete_user(id):
         try:
             result, error = delete_document(users_collection, id)
