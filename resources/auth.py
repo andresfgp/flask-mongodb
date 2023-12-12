@@ -1,7 +1,7 @@
 from flask_bcrypt import Bcrypt
 from flask import jsonify, request
 from bson import ObjectId
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt, jwt_required, get_jwt_identity
 from blacklist import token_blacklist
 
 bcrypt = Bcrypt()
@@ -12,6 +12,13 @@ class User:
         self.email = email
         self.full_name = full_name
 
+    def to_dict(self):
+        return {
+            'id': str(self.id),
+            'email': self.email,
+            'full_name': self.full_name,
+        }
+
 def configure_auth(app, users_collection):
     jwt = JWTManager(app)
 
@@ -19,14 +26,14 @@ def configure_auth(app, users_collection):
     def user_loader_callback(identity):
         user_data = users_collection.find_one({'_id': ObjectId(identity)})
         if user_data:
-            return User(id=str(user_data['_id']), email=user_data['email'], full_name=user_data.get('full_name', ''))
+            user = User(id=str(user_data['_id']), email=user_data['email'], full_name=user_data.get('full_name', ''))
+            return user.to_dict()
 
     @app.route('/login', methods=['POST'])
     def login():
         try:
-            data = request.get_json()
-            email = data.get('email')
-            password = data.get('password')
+            email = request.json.get('email')
+            password = request.json.get('password')
 
             if not email or not password:
                 return jsonify({'error': 'Email and password are required'}), 400
@@ -56,3 +63,10 @@ def configure_auth(app, users_collection):
             return jsonify({'message': 'Logout successful'}), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+
+    @app.route('/refresh', methods=['POST'])
+    @jwt_required(refresh=True)
+    def refresh():
+        current_user = get_jwt_identity()
+        new_token = create_access_token(identity=current_user)
+        return jsonify({'token': new_token}), 200
