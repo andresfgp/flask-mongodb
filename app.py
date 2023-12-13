@@ -7,9 +7,12 @@ from resources.users import configure_users_routes
 from resources.roles import configure_roles_routes
 from resources.contact import configure_contact_routes
 from resources.auth import configure_auth
+from datetime import timedelta
 
 app = Flask(__name__)
-app.secret_key = "your_secret_key"
+app.config['JWT_SECRET_KEY'] = 'your_secret_key'
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1) 
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
 CORS(app)
 app.config["MONGO_URI"] = "mongodb+srv://aussie-tea-user:GNoKDXUv3swk4ydK@aussie-tea.xcz2kza.mongodb.net/form?retryWrites=true&w=majority"
 

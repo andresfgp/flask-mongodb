@@ -7,16 +7,18 @@ from blacklist import token_blacklist
 bcrypt = Bcrypt()
 
 class User:
-    def __init__(self, id, email, full_name=""):
+    def __init__(self, id, email, full_name="", role="user"):
         self.id = id
         self.email = email
         self.full_name = full_name
+        self.role = role
 
     def to_dict(self):
         return {
             'id': str(self.id),
             'email': self.email,
             'full_name': self.full_name,
+            'role': self.role,
         }
 
 def configure_auth(app, users_collection):
@@ -26,7 +28,12 @@ def configure_auth(app, users_collection):
     def user_loader_callback(identity):
         user_data = users_collection.find_one({'_id': ObjectId(identity)})
         if user_data:
-            user = User(id=str(user_data['_id']), email=user_data['email'], full_name=user_data.get('full_name', ''))
+            user = User(
+                id=str(user_data['_id']),
+                email=user_data['email'],
+                full_name=user_data.get('full_name', ''),
+                role=user_data.get('role', 'user'),
+            )
             return user.to_dict()
 
     @app.route('/login', methods=['POST'])
