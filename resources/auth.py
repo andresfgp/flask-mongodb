@@ -1,7 +1,7 @@
 from flask_bcrypt import Bcrypt
-from flask import jsonify, request
+from flask import jsonify, request, make_response
 from bson import ObjectId
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt, jwt_required, get_jwt_identity
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, decode_token, get_jwt, jwt_required, create_refresh_token
 from blacklist import token_blacklist
 
 bcrypt = Bcrypt()
@@ -47,13 +47,15 @@ def configure_auth(app, users_collection):
 
             user = users_collection.find_one({'email': email})
             if user and bcrypt.check_password_hash(user['password'], password):
-                token = create_access_token(identity=str(user['_id']))
+                access_token = create_access_token(identity=str(user['_id']))
+                refresh_token = create_refresh_token(identity=str(user['_id']))
+
                 additional_data = {
                     'user_id': str(user['_id']),
                     'email': user['email'],
                     'full_name': user.get('full_name', ''),
                 }
-                return jsonify({'message': 'Login successful', 'data': additional_data, 'token': token}), 200
+                return jsonify({'message': 'Login successful', 'data': additional_data, 'token': access_token, 'refresh_token': refresh_token}), 200
 
             return jsonify({'error': 'Invalid email or password'}), 401
         except Exception as e:
@@ -72,8 +74,15 @@ def configure_auth(app, users_collection):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/refresh', methods=['POST'])
-    @jwt_required(refresh=True)
     def refresh():
-        current_user = get_jwt_identity()
-        new_token = create_access_token(identity=current_user)
-        return jsonify({'token': new_token}), 200
+        try:
+            print("Refreshing token...")
+            refresh_token = request.json.get('refresh_token')
+            decoded_token = decode_token(refresh_token)
+            new_token = create_access_token(identity=str(decoded_token['sub']["id"]))
+            print(str(decoded_token['sub']["id"]))
+            response = make_response(jsonify({'token': new_token }), 200)
+            return response
+        except Exception as e:
+            print("Error during refresh:", str(e))
+            return jsonify({'error': str(e)}), 500
