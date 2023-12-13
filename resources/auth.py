@@ -76,13 +76,10 @@ def configure_auth(app, users_collection):
     @app.route('/refresh', methods=['POST'])
     def refresh():
         try:
-            print("Refreshing token...")
             refresh_token = request.json.get('refresh_token')
             decoded_token = decode_token(refresh_token)
             new_token = create_access_token(identity=str(decoded_token['sub']["id"]))
-            print(str(decoded_token['sub']["id"]))
             response = make_response(jsonify({'token': new_token }), 200)
             return response
         except Exception as e:
-            print("Error during refresh:", str(e))
             return jsonify({'error': str(e)}), 500
