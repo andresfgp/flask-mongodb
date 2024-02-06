@@ -1,3 +1,4 @@
+# crud_operations.py
 from flask_bcrypt import Bcrypt
 from bson import ObjectId
 from datetime import datetime
@@ -14,17 +15,17 @@ def get_current_user():
 
 def set_defaults(data, current_user_id):
     metadata = {
-        'created_at': str(datetime.utcnow()),
-        'created_by': current_user_id or 'Guest',
-        'is_deleted': False
+        'createdAt': str(datetime.utcnow()),
+        'createdBy': current_user_id or 'Guest',
+        'isDeleted': False
     }
     data.setdefault('metadata', metadata)
     return data
 
 def update_defaults(data, current_user_id):
     metadata = {
-        'updated_at': str(datetime.utcnow()),
-        'updated_by': current_user_id or 'Guest'
+        'updatedAt': str(datetime.utcnow()),
+        'updatedBy': current_user_id or 'Guest'
     }
     data.setdefault('metadata', {}).update(metadata)
     return data
@@ -45,29 +46,29 @@ def create_document(collection, data):
         result = collection.insert_one(data)
         return str(result.inserted_id), None
     except Exception as e:
-        return None, f"Error creating document: {e}"
+        return None, f"Error creating element: {e}"
 
 def read_all_documents(collection):
     try:
-        query = {'metadata.is_deleted': False}
+        query = {'metadata.isDeleted': False}
         data = list(collection.find(query))
         for item in data:
             item['_id'] = str(item['_id'])
         return data, None
     except Exception as e:
-        return None, f"Error reading documents: {e}"
+        return None, f"Error reading elements: {e}"
 
 def read_one_document(collection, document_id):
     try:
-        query = {'_id': ObjectId(document_id), 'metadata.is_deleted': False}
+        query = {'_id': ObjectId(document_id), 'metadata.isDeleted': False}
         data = collection.find_one(query)
         if data:
             data['_id'] = str(data['_id'])
             return data, None
         else:
-            return None, 'Document not found'
+            return None, 'Element not found'
     except Exception as e:
-        return None, f"Error reading document: {e}"
+        return None, f"Error reading element: {e}"
 
 def update_document(collection, document_id, data):
     try:
@@ -77,13 +78,13 @@ def update_document(collection, document_id, data):
             data = encrypt_password(data)
             result = replace_document(collection, document_id, data)
             if result.modified_count > 0:
-                return 'Document replaced successfully', None
+                return 'Element replaced successfully', None
             else:
-                return None, 'Document not found or no changes made'
+                return None, 'Element not found or no changes made'
         else:
-            return None, 'Document not found'
+            return None, 'Element not found'
     except Exception as e:
-        return None, f"Error updating document: {e}"
+        return None, f"Error updating element: {e}"
 
 def partial_update_document(collection, document_id, data):
     try:
@@ -93,21 +94,21 @@ def partial_update_document(collection, document_id, data):
             data = encrypt_password(data)
             
             # Implementing soft delete with 'metadata.is_deleted' field
-            if data.get('metadata.is_deleted') is True:
-                data['metadata']['deleted_at'] = str(datetime.utcnow())
-                data['metadata']['deleted_by'] = current_user_id or 'Guest'
+            if data.get('metadata.isDeleted') is True:
+                data['metadata']['deletedAt'] = str(datetime.utcnow())
+                data['metadata']['deletedBy'] = current_user_id or 'Guest'
 
             result = collection.update_one({'_id': ObjectId(document_id)}, {'$set': data})
             if result.modified_count > 0:
-                return 'Document partially updated successfully', None
+                return 'Element partially updated successfully', None
             else:
-                return None, 'Document not found or no changes made'
+                return None, 'Element not found or no changes made'
         else:
-            return None, 'Document not found'
+            return None, 'Element not found'
     except Exception as e:
-        return None, f"Error updating document: {e}"
+        return None, f"Error updating element: {e}"
 
-def delete_document(collection, document_id, hard_delete=True):
+def delete_document(collection, document_id, hard_delete=False):
     try:
         if document_exists(collection, document_id):
             result = None
@@ -117,23 +118,37 @@ def delete_document(collection, document_id, hard_delete=True):
                 query = {'_id': ObjectId(document_id)}
                 data = {
                     '$set': {
-                        'metadata.is_deleted': True,
-                        'metadata.deleted_at': str(datetime.utcnow()),
-                        'metadata.deleted_by': get_current_user() or 'Guest'
+                        'metadata.isDeleted': True,
+                        'metadata.deletedAt': str(datetime.utcnow()),
+                        'metadata.deletedBy': get_current_user() or 'Guest'
                     }
                 }
                 result = collection.update_one(query, data)
             if result:
                 if hard_delete:
                     if result.deleted_count > 0:
-                        return 'Document hard deleted successfully', None
+                        return 'Element hard deleted successfully', None
                     else:
-                        return None, 'Document not found or no changes made'
+                        return None, 'Element not found or no changes made'
                 else:
-                    return f'Document {"hard" if hard_delete else "soft"} deleted successfully', None
+                    return f'Element {"hard" if hard_delete else "soft"} deleted successfully', None
             else:
-                return None, 'Document not found'
+                return None, 'Element not found'
         else:
-            return None, 'Document not found'
+            return None, 'Element not found'
     except Exception as e:
-        return None, f"Error deleting document: {e}"
+        return None, f"Error deleting element: {e}"
+
+def delete_documents(collection, document_ids, hard_delete=False):
+    results = None
+    for document_id in document_ids:
+        delete_status, error_message = delete_document(collection, document_id, hard_delete)
+        if delete_status:
+            results=document_id
+
+    if not results:  # Check the flag to determine if no documents were successfully deleted
+        return None, 'No elements found'
+    if not error_message:  # Check the flag to determine if no documents were successfully deleted
+        return None, error_message
+
+    return results, None
