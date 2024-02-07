@@ -2,7 +2,7 @@
 from flask_bcrypt import Bcrypt
 from flask import jsonify, request, make_response, current_app
 from bson import ObjectId
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, decode_token, get_jwt, jwt_required, create_refresh_token
+from flask_jwt_extended import jwt_required, create_access_token, decode_token, get_jwt, jwt_required, create_refresh_token, get_jwt_identity
 from blacklist import token_blacklist
 from flask_smorest import Blueprint
 from init_app import get_collection, jwt
@@ -109,6 +109,41 @@ def register():
         if error:
             return jsonify({'error': error}), 500
         return jsonify({'id': result}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@blp.route('/me', methods=['GET'])
+@jwt_required()
+def get_current_user():
+    try:
+        user_identity = get_jwt_identity()
+        
+        # Extract the user ID from the identity dictionary
+        user_id = user_identity['id']
+
+        # Find the user in the database
+        user = get_users_collection().find_one({'_id': ObjectId(user_id), 'metadata.isDeleted': False})
+
+        if user:
+            # Construct the response user object
+            userData = {
+                "id": str(user['_id']),
+                "displayName": user.get('fullName'),
+                "email": user['email'],
+                "photoURL": user.get('photoURL'),
+                "phoneNumber": user.get('phoneNumber'),
+                "country": user.get('country'),
+                "address": user.get('address'),
+                "state": user.get('state'),
+                "city": user.get('city'),
+                "zipCode": user.get('zipCode'),
+                "about": user.get('about'),
+                "role": user.get('role', 'user'),
+                "isPublic": user.get('isPublic', True),
+            }
+            return jsonify({'user': userData}), 200
+
+        return jsonify({'error': 'User not found'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
