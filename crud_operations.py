@@ -140,15 +140,26 @@ def delete_document(collection, document_id, hard_delete=False):
         return None, f"Error deleting element: {e}"
 
 def delete_documents(collection, document_ids, hard_delete=False):
-    results = None
+    results = []
+    error_message = None
+
     for document_id in document_ids:
-        delete_status, error_message = delete_document(collection, document_id, hard_delete)
+        delete_status, error_msg = delete_document(collection, document_id, hard_delete)
+
         if delete_status:
-            results=document_id
+            # Add successful deletion to the results list
+            results.append(delete_status)
+        elif error_msg:
+            # Capture the first error message encountered
+            if not error_message:
+                error_message = error_msg
 
-    if not results:  # Check the flag to determine if no documents were successfully deleted
-        return None, 'No elements found'
-    if not error_message:  # Check the flag to determine if no documents were successfully deleted
-        return None, error_message
+    if not results:  # If no documents were successfully deleted
+        return None, 'No elements found' if not error_message else error_message
 
+    # If there were some successful deletions but also some errors
+    if error_message:
+        return results, error_message
+
+    # If all deletions were successful
     return results, None
