@@ -13,7 +13,7 @@ class ProductSchema(Schema):
     name = fields.Str(required=True)
     description = fields.Str(required=True)
     subDescription = fields.Str(required=False)
-    images = fields.List(fields.Nested(ImageSchema), required=True)
+    images = fields.List(fields.Str(required=True))
     # Properties
     # code = fields.Str(required=False)
     # sku = fields.Str(required=False)
@@ -45,7 +45,7 @@ class ProductPatchSchema(ProductSchema):
     name = fields.Str(required=False)
     description = fields.Str(required=False)
     subDescription = fields.Str(required=False)
-    images = fields.List(fields.Nested(ImageSchema), required=False)
+    images = fields.List(fields.Str(required=False))
     # Properties
     # code = fields.Str(required=False)
     # sku = fields.Str(required=False)

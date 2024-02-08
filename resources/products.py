@@ -44,8 +44,8 @@ def create_product():
         return jsonify({'error': str(e)}), 500
 
 @blp.route('/', strict_slashes=False, methods=['GET'])
-@jwt_required()
-@roles_required(required_roles=['admin'])
+# @jwt_required()
+# @roles_required(required_roles=['admin'])
 def read_products():
     try:
         data, error = read_all_documents(get_products_collection())
