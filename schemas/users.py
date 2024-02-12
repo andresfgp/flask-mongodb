@@ -17,7 +17,7 @@ class UserSchema(Schema):
     country = fields.Str(required=False)
     zipCode = fields.Str(required=False)
     company = fields.Str(required=False)
-    avatarUrl =  fields.Nested(AvatarUrlSchema, required=False)
+    avatarUrl =  fields.Nested(AvatarUrlSchema, required=False, allow_none=True)
     status = fields.Str(required=False)
     isVerified = fields.Boolean(required=False)
 

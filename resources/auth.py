@@ -101,14 +101,43 @@ def register():
         data['fullName'] = f"{data.get('firstName', '')} {data.get('lastName', '')}"
         
         # Default role as public
-        data['role'] = data.get('role', 'public')
+        data['role'] = data.get('role', 'admin')
+        data['status'] = data.get('status', 'active')
 
         # Encrypt the password before saving to the database
         data['password'] = bcrypt.generate_password_hash(data['password']).decode('utf-8')
         result, error = create_document(get_users_collection(), data)
         if error:
             return jsonify({'error': error}), 500
-        return jsonify({'id': result}), 201
+
+        # Create access and refresh tokens for the new user
+        accessToken = create_access_token(identity=str(result))
+        refreshToken = create_refresh_token(identity=str(result))
+
+        # Construct the response user object
+        userData = {
+            "id": result,
+            "displayName": data.get('fullName'),
+            "email": data['email'],
+            "photoURL": data.get('photoURL', ''),
+            "phoneNumber": data.get('phoneNumber', ''),
+            "country": data.get('country', ''),
+            "address": data.get('address', ''),
+            "state": data.get('state', ''),
+            "city": data.get('city', ''),
+            "zipCode": data.get('zipCode', ''),
+            "about": data.get('about'),
+            "role": data.get('role', 'admin'), # Updated to reflect default admin role
+            "isPublic": data.get('isPublic', True),
+        }
+
+        # Construct the response
+        return jsonify({
+            "accessToken": accessToken,
+            "refreshToken": refreshToken,
+            "user": userData
+        }), 201
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
